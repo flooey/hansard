@@ -1,0 +1,9 @@
+Data in scrapedxml is from
+https://parser.theyworkforyou.com/parser.html, instructions are there.
+This data is scraped from HTML files on the Parliament site.
+
+Source Hansard zipped XML files appear to be at
+http://www.hansard-archive.parliament.uk/
+
+Historic Hansard bulk URL list found at
+https://andrewwhitby.com/2013/10/26/uk-hansard-archive-urls/
