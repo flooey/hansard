@@ -25,7 +25,7 @@ def words_for_file(filename, data={}):
   return data
 
 def text_for_house(house):
-  date = house.find('date').attrib['format']
+  date = house.find('date').attrib['format'].strip()
   for n in house.iter('col'):
     n.text = ''
   return date, " ".join(map(text_for_holder, list(house.iter('p'))))
