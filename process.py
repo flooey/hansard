@@ -62,8 +62,8 @@ def tokenize(text, data, date, filename, house):
       word = lowertext[start:index]
       if word not in data or data[word].date > date:
         snip_start = find_snip_boundary(lowertext, start, -1)
-        snip_end = find_snip_boundary(lowertext, index-1, 1)
-        snippet = text[snip_start+1:snip_end].strip()
+        snip_end = 1 + find_snip_boundary(lowertext, index-1, 1)
+        snippet = text[snip_start:snip_end].strip()
         if snip_end < len(text) and text[snip_end] == '.':
           snippet += '.'
         data[word] = WordData(word, date, snippet, house, filename)
@@ -83,21 +83,26 @@ def make_word(lowertext, index):
     break
   return (start_index, index)
 
+ALLOWED_ABBREVIATIONS = ['mr', 'mrs', 'ms', 'hon', 'esq', 'no', 'nos']
+
 def find_snip_boundary(lowertext, index, dir):
-  while 0 <= (index + dir) < len(lowertext):
-    index += dir
+  keep_going = True
+  while 0 <= index < len(lowertext) and keep_going:
+    keep_going = False
     c = lowertext[index]
     if c.isalpha() or '0' <= c <= '9' or c in ":; ',-()":
-      continue
+      keep_going = True
     if c == '.':
       if index >= 2 and lowertext[index-2] == ' ' and lowertext[index-1].isalpha():
-        continue
-      if index >= 2 and lowertext[index-2:index] == 'mr':
-        continue
-      if index >= 3 and (lowertext[index-3:index] == 'hon' or lowertext[index-3:index] == 'esq'):
-        continue
-    break
-  return index
+        keep_going = True
+      else:
+        for abbr in ALLOWED_ABBREVIATIONS:
+          if index >= len(abbr) and lowertext[index-len(abbr):index] == abbr:
+            keep_going = True
+            break
+    if keep_going:
+      index += dir
+  return index - dir
 
 def main():
   parser = argparse.ArgumentParser()
