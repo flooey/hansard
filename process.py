@@ -64,8 +64,8 @@ def tokenize(text, data, date, filename, house):
         snip_start = find_snip_boundary(lowertext, start, -1)
         snip_end = 1 + find_snip_boundary(lowertext, index-1, 1)
         snippet = text[snip_start:snip_end].strip()
-        if snip_end < len(text) and text[snip_end] == '.':
-          snippet += '.'
+        if snip_end < len(text) and text[snip_end] in ".?!":
+          snippet += text[snip_end]
         data[word] = WordData(word, date, snippet, house, filename)
     index += 1
 
@@ -83,14 +83,14 @@ def make_word(lowertext, index):
     break
   return (start_index, index)
 
-ALLOWED_ABBREVIATIONS = ['mr', 'mrs', 'ms', 'hon', 'esq', 'no', 'nos']
+ALLOWED_ABBREVIATIONS = ['mr', 'mrs', 'ms', 'hon', 'esq', 'no', 'nos', '&c']
 
 def find_snip_boundary(lowertext, index, dir):
   keep_going = True
   while 0 <= index < len(lowertext) and keep_going:
     keep_going = False
     c = lowertext[index]
-    if c.isalpha() or '0' <= c <= '9' or c in ":; ',-()":
+    if c.isalpha() or '0' <= c <= '9' or c in ":; ',-()&":
       keep_going = True
     if c == '.':
       if index >= 2 and lowertext[index-2] == ' ' and lowertext[index-1].isalpha():
