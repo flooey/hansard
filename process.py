@@ -4,11 +4,12 @@ import argparse
 from collections import namedtuple
 import itertools
 import json
+import os.path
 import re
 import sys
 import xml.etree.ElementTree as ET
 
-WordData = namedtuple('WordData', ['word', 'date', 'snippet'])
+WordData = namedtuple('WordData', ['word', 'date', 'snippet', 'house', 'file'])
 
 def eprint(*args, **kwargs):
   print(*args, file=sys.stderr, **kwargs)
@@ -18,11 +19,22 @@ def words_for_file(filename, data={}):
   root = tree.getroot()
   for node in itertools.chain(root.findall('housecommons'), root.findall('houselords')):
     date, text = text_for_house(node)
-    tokenize(text, data, date)
+    tokenize(text, data, date, os.path.basename(filename), node.tag[5:])
   return data
+
+DATE_FIXES = {
+  '0982-11-16': '1982-11-16',  # S6CV0032P0
+  '1013-06-24': '1913-06-24',  # S5LV0014P0
+  '1054-04-07': '1954-04-07',  # S5LV0186P0
+  '1093-03-09': '1983-03-09',  # S6CV0038P0
+  '1101-08-10': '1911-08-10',  # S5CV0029P0
+  '1643-05-18': '1943-05-18',  # S5CV0389P0
+}
 
 def text_for_house(house):
   date = house.find('date').attrib['format'].strip()
+  if date in DATE_FIXES:
+    date = DATE_FIXES[date]
   for n in house.iter('col'):
     n.text = ''
   return date, " ".join(map(text_for_holder, list(house.iter('p'))))
@@ -41,7 +53,7 @@ def text_for_holder(holder):
 NON_WORD_CHAR = r"[^\w'-]"
 NON_WORDS = re.compile(f"{NON_WORD_CHAR}+")
 
-def tokenize(text, data, date):
+def tokenize(text, data, date, filename, house):
   lowertext = text.casefold()
   index = 0
   while index < len(lowertext):
@@ -54,7 +66,7 @@ def tokenize(text, data, date):
         snippet = text[snip_start+1:snip_end].strip()
         if snip_end < len(text) and text[snip_end] == '.':
           snippet += '.'
-        data[word] = WordData(word, date, snippet)
+        data[word] = WordData(word, date, snippet, house, filename)
     index += 1
 
 def make_word(lowertext, index):
