@@ -18,23 +18,49 @@ def words_for_file(filename, data={}):
   tree = ET.parse(open(filename))
   root = tree.getroot()
   for node in itertools.chain(root.findall('housecommons'), root.findall('houselords')):
-    date, text = text_for_house(node)
+    date, text = text_for_house(node, os.path.basename(filename))
     tokenize(text, data, date, os.path.basename(filename), node.tag[5:])
   return data
 
 DATE_FIXES = {
-  '0982-11-16': '1982-11-16',  # S6CV0032P0
-  '1013-06-24': '1913-06-24',  # S5LV0014P0
-  '1054-04-07': '1954-04-07',  # S5LV0186P0
-  '1093-03-09': '1983-03-09',  # S6CV0038P0
-  '1101-08-10': '1911-08-10',  # S5CV0029P0
-  '1643-05-18': '1943-05-18',  # S5CV0389P0
+  ('0982-11-16', 'S6CV0032P0.xml'): '1982-11-16',
+  ('1013-06-24', 'S5LV0014P0.xml'): '1913-06-24',
+  ('1054-04-07', 'S5LV0186P0.xml'): '1954-04-07',
+  ('1093-03-09', 'S6CV0038P0.xml'): '1983-03-09',
+  ('1101-08-10', 'S5CV0029P0.xml'): '1911-08-10',
+  ('1643-05-18', 'S5CV0389P0.xml'): '1943-05-18',
+  ('1802-07-02', 'S1V0005P0.xml'): '1805-07-02',
+  ('1803-03-29', 'S1V0001P0.xml'): '1804-03-29',
+  ('1804-04-09', 'S4V0022P0.xml'): '1894-04-09',
+  ('1804-05-03', 'S4V0024P0.xml'): '1894-05-03',
+  ('1805-04-02', 'S1V0006P0.xml'): '1806-04-02',
+  ('1806-01-03', 'S1V0008P0.xml'): '1807-01-03',
+  ('1806-01-17', 'S1V0008P0.xml'): '1807-01-16',
+  ('1809-03-13', 'S1V0006P0.xml'): '1806-03-13',
+  ('1809-03-13', 'S1V0009P0_a.xml'): '1807-03-13',
+  ('1809-03-17', 'S1V0009P0_a.xml'): '1807-03-17',
+  ('1809-07-01', 'S1V0009P0_b.xml'): '1807-07-01',
+  ('1837-01-16', 'S3V0040P0.xml'): '1838-01-16',
+  ('1846-01-26', 'S3V0089P0.xml'): '1847-01-26',
+  ('1868-02-24', 'S3V0194P0.xml'): '1869-02-24',
+  ('1898-08-03', 'S4V0015P0.xml'): '1893-08-03',
+  ('1900-12-11', 'S6CV0182P0.xml'): '1990-12-11',
+  ('1907-03-23', 'S1V0009P0_a.xml'): '1807-03-23',
+  ('1925-05-03', 'S2V0013P0.xml'): '1825-05-03',
+  ('19389-02-23', 'S5LV0111P0.xml'): '1938-02-23',
+  ('1974-04-14', 'S6CV0241P0.xml'): '1994-04-14',
+  ('1983-04-20', 'S4V0011P0.xml'): '1893-04-20',
+  ('1983-05-09', 'S4V0012P0.xml'): '1893-05-09',
+  ('1993-05-16', 'S4V0012P0.xml'): '1893-05-16',
+  ('19940-02-16', 'S5LV0552P0.xml'): '1994-02-16',
+  ('19954-06-27', 'S5LV0565P0.xml'): '1995-06-27',
+  ('2001-11-19', 'S6CV0129P0.xml'): '1988-03-07',
 }
 
-def text_for_house(house):
+def text_for_house(house, filename):
   date = house.find('date').attrib['format'].strip()
-  if date in DATE_FIXES:
-    date = DATE_FIXES[date]
+  if (date, filename) in DATE_FIXES:
+    date = DATE_FIXES[(date, filename)]
   for n in house.iter('col'):
     n.text = ''
   return date, " ".join(map(text_for_holder, list(house.iter('p'))))
