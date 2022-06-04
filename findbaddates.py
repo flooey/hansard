@@ -10,7 +10,7 @@ import xml.etree.ElementTree as ET
 def eprint(*args, **kwargs):
   print(*args, file=sys.stderr, **kwargs)
 
-ALLOWABLE_GAP = timedelta(days=360)
+ALLOWABLE_GAP = timedelta(days=250)
 
 def check_file(filename):
   tree = ET.parse(open(filename))
@@ -23,6 +23,8 @@ def check_file(filename):
     d = date.fromisoformat(date_string)
     if len(dates) > 0 and (d - dates[-1] > ALLOWABLE_GAP or dates[-1] - d > ALLOWABLE_GAP):
       print(f"  {dates[-1]} -> {d} [{node.text}] - (first date {dates[0]})")
+      print(f"  ('{d}', '{os.path.basename(filename)}'): '{d}',")
+      print()
     dates.append(d)
 
 def main():
