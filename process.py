@@ -264,9 +264,6 @@ def text_for_holder(holder):
       text += " "
   return text
 
-NON_WORD_CHAR = r"[^\w'-]"
-NON_WORDS = re.compile(f"{NON_WORD_CHAR}+")
-
 def tokenize(text, data, date, filename, house):
   lowertext = text.casefold()
   index = 0
@@ -280,6 +277,8 @@ def tokenize(text, data, date, filename, house):
         snippet = text[snip_start:snip_end].strip()
         if snip_end < len(text) and text[snip_end] in ".?!":
           snippet += text[snip_end]
+          if snip_end + 1 < len(text) and text[snip_end+1] == '"':
+            snippet += text[snip_end+1]
         data[word] = WordData(word, date, snippet, house, filename)
     index += 1
 
@@ -304,7 +303,7 @@ def find_snip_boundary(lowertext, index, dir):
   while 0 <= index < len(lowertext) and keep_going:
     keep_going = False
     c = lowertext[index]
-    if c.isalpha() or '0' <= c <= '9' or c in ":; ',-()&":
+    if c.isalpha() or '0' <= c <= '9' or c in ":; ',-()&\"":
       keep_going = True
     if c == '.':
       if index >= 2 and lowertext[index-2] == ' ' and lowertext[index-1].isalpha():
