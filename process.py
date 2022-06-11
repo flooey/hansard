@@ -5,7 +5,6 @@ from collections import namedtuple
 import itertools
 import json
 import os.path
-import re
 import sys
 import xml.etree.ElementTree as ET
 
@@ -18,8 +17,8 @@ def words_for_file(filename, data={}):
   tree = ET.parse(open(filename))
   root = tree.getroot()
   for node in itertools.chain(root.findall('housecommons'), root.findall('houselords')):
-    date, text = text_for_house(node, os.path.basename(filename))
-    tokenize(text, data, date, os.path.basename(filename), node.tag[5:])
+    for date, text in texts_for_house(node, os.path.basename(filename)):
+      tokenize(text, data, date, os.path.basename(filename), node.tag[5:])
   return data
 
 DATE_FIXES = {
@@ -245,13 +244,26 @@ DATE_FIXES = {
   ('2002-04-09', 'S6CV0403P0.xml'): '2003-04-09',
 }
 
-def text_for_house(house, filename):
-  date = house.find('date').attrib['format'].strip()
+def date_it(node, filename):
+  assert node.tag == 'date'
+  date = node.attrib['format'].strip()
   if (date, filename) in DATE_FIXES:
     date = DATE_FIXES[(date, filename)]
+  return date
+
+def texts_for_house(house, filename):
   for n in house.iter('col'):
     n.text = ''
-  return date, " ".join(map(text_for_holder, list(house.iter('p'))))
+  results = []
+  for node in house.findall('*'):
+    if node.find('date') is not None:
+      results.append((date_it(node.find('date'), filename), all_the_text(node)))
+      house.remove(node)
+  results.insert(0, (date_it(house.find('date'), filename), all_the_text(house)))
+  return results
+
+def all_the_text(holder):
+  return " ".join(map(text_for_holder, list(holder.iter('p'))))
 
 def text_for_holder(holder):
   text = ""
