@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from process import DATE_FIXES
+from process import date_it
 import argparse
 from datetime import date, timedelta
 import os.path
@@ -17,9 +17,7 @@ def check_file(filename):
   root = tree.getroot()
   dates = []
   for node in root.iter('date'):
-    date_string = node.attrib['format'].strip()
-    if (date_string, os.path.basename(filename)) in DATE_FIXES:
-      date_string = DATE_FIXES[(date_string, os.path.basename(filename))]
+    date_string = date_it(node, os.path.basename(filename))
     d = date.fromisoformat(date_string)
     if len(dates) > 0 and (d - dates[-1] > ALLOWABLE_GAP or dates[-1] - d > ALLOWABLE_GAP):
       print(f"  {dates[-1]} -> {d} [{node.text}] - (first date {dates[0]})")
