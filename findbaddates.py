@@ -10,7 +10,7 @@ import xml.etree.ElementTree as ET
 def eprint(*args, **kwargs):
   print(*args, file=sys.stderr, **kwargs)
 
-ALLOWABLE_GAP = timedelta(days=250)
+ALLOWABLE_GAP = timedelta(days=150)
 
 def check_file(filename):
   tree = ET.parse(open(filename))
