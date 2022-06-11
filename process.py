@@ -309,7 +309,7 @@ def tokenize(text, data, date, filename, house):
   index = 0
   while index < len(lowertext):
     if lowertext[index].isalpha():
-      start, index = make_word(lowertext, index)
+      start, index = make_word(text, index)
       word = lowertext[start:index]
       if word not in data or data[word].date > date:
         snip_start = find_snip_boundary(lowertext, start, -1)
@@ -322,17 +322,23 @@ def tokenize(text, data, date, filename, house):
         data[word] = WordData(word, date, snippet, house, filename)
     index += 1
 
-def make_word(lowertext, index):
+def make_word(text, index):
   start_index = index
-  while index < len(lowertext):
-    c = lowertext[index]
+  while index < len(text):
+    c = text[index]
     if c.isalpha():
       index += 1
       continue
     if c == "'" or c == '-':
-      if index + 1 < len(lowertext) and lowertext[index+1].isalpha():
+      if index + 1 < len(text) and text[index+1].isalpha():
         index += 1
         continue
+    if c == " " and index + 1 < len(text) and text[start_index].isupper() and text[index+1].isupper():
+      index += 1
+      continue
+    if c == '.' and index + 1 < len(text) and text[index+1].isalpha():
+      index += 1
+      continue
     break
   return (start_index, index)
 
@@ -346,7 +352,7 @@ def find_snip_boundary(lowertext, index, dir):
     if c.isalpha() or '0' <= c <= '9' or c in ":; ',-()&\"":
       keep_going = True
     if c == '.':
-      if index >= 2 and lowertext[index-2] == ' ' and lowertext[index-1].isalpha():
+      if index >= 2 and lowertext[index-2] in ' .' and lowertext[index-1].isalpha():
         keep_going = True
       else:
         for abbr in ALLOWED_ABBREVIATIONS:
