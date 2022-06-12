@@ -5,6 +5,7 @@ from collections import namedtuple
 import itertools
 import json
 import os.path
+import re
 import sys
 import xml.etree.ElementTree as ET
 
@@ -291,7 +292,7 @@ def texts_for_house(house, filename):
   return results
 
 def all_the_text(holder):
-  return " ".join(map(text_for_holder, list(holder.iter('p'))))
+  return re.sub(" +", " ", " ".join(map(text_for_holder, list(holder.iter('p')))))
 
 def text_for_holder(holder):
   text = ""
@@ -309,21 +310,23 @@ def tokenize(text, data, date, filename, house):
   index = 0
   while index < len(lowertext):
     if lowertext[index].isalpha():
-      start, index = make_word(text, index)
-      word = lowertext[start:index]
-      if word not in data or data[word].date > date:
-        snip_start = find_snip_boundary(lowertext, start, -1)
-        snip_end = 1 + find_snip_boundary(lowertext, index-1, 1)
-        snippet = text[snip_start:snip_end].strip()
-        if snip_end < len(text) and text[snip_end] in ".?!":
-          snippet += text[snip_end]
-          if snip_end + 1 < len(text) and text[snip_end+1] == '"':
-            snippet += text[snip_end+1]
-        data[word] = WordData(word, date, snippet, house, filename)
+      for start, index in make_words(text, index):
+        word = lowertext[start:index]
+        if word not in data or data[word].date > date:
+          snip_start = find_snip_boundary(lowertext, start, -1)
+          snip_end = 1 + find_snip_boundary(lowertext, index-1, 1)
+          snippet = text[snip_start:snip_end].strip()
+          if snip_end < len(text) and text[snip_end] in ".?!":
+            snippet += text[snip_end]
+            if snip_end + 1 < len(text) and text[snip_end+1] == '"':
+              snippet += text[snip_end+1]
+          data[word] = WordData(word, date, snippet, house, filename)
     index += 1
 
-def make_word(text, index):
+def make_words(text, index):
   start_index = index
+  starts = [index]
+  results = []
   while index < len(text):
     c = text[index]
     if c.isalpha():
@@ -334,15 +337,18 @@ def make_word(text, index):
         index += 1
         continue
     if c == " " and index + 1 < len(text) and text[start_index].isupper() and text[index+1].isupper():
+      results.extend(map(lambda x: (x, index), starts))
+      starts.append(index+1)
       index += 1
       continue
     if c == '.' and index + 1 < len(text) and text[index+1].isalpha():
       index += 1
       continue
     break
-  return (start_index, index)
+  results.extend(map(lambda x: (x, index), starts))
+  return results
 
-ALLOWED_ABBREVIATIONS = ['mr', 'mrs', 'ms', 'hon', 'esq', 'no', 'nos', '&c']
+ALLOWED_ABBREVIATIONS = ['mr', 'mrs', 'ms', 'hon', 'esq', 'no', 'nos', '&c', 'col', 'cols']
 
 def find_snip_boundary(lowertext, index, dir):
   keep_going = True
